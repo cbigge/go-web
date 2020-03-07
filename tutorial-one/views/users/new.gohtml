@@ -1,0 +1,30 @@
+{{define "yield"}}
+    <div class="row">
+        <div class="col-md-4 mx-auto">
+            <div class="card">
+                <div class="card-header">Welcome</div>
+                <div class="card-body">
+                    {{template "signupForm"}}
+                </div>
+            </div>
+        </div>
+    </div>
+{{end}}
+
+{{define "signupForm"}}
+    <form action="/signup" method="POST">
+        <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" name="name" id="name" class="form-control" placeholder="Bob Smith" />
+        </div>
+        <div class="form-group">
+            <label for="email">Email address</label>
+            <input type="email" name="email" id="email" class="form-control" placeholder="you@example.com"/>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" name="password" id="password" class="form-control" placeholder="password" />
+        </div>
+        <button type="submit" class="btn btn-success">Sign Up</button>
+    </form>
+{{end}}

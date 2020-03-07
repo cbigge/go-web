@@ -8,8 +8,12 @@
                 rel="stylesheet">
         </head>
         <body>
-            <div class="container-fluid">
+            {{template "navbar"}}
+
+            <div class="container-fluid mt-4">
                 {{template "yield" .}}
+
+                {{template "footer"}}
             </div>
 
             <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>

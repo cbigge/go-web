@@ -1,46 +1,44 @@
 package main
 
 import (
-	"html/template"
+	"fmt"
 	"net/http"
 
-	"github.com/cbigge/go-web/views"
+	"github.com/cbigge/go-web/tutorial-one/controllers"
+	"github.com/cbigge/go-web/tutorial-one/models"
 
 	"github.com/gorilla/mux"
 )
 
-var homeView *views.View
-var contactView *views.View
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "postgres"
+	password = "a9725770137"
+	dbname   = "example_dev"
+)
 
 func main() {
-	var err error
-	homeView, err = views.NewView("views/home.gohtml")
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	us, err := models.NewUserService(psqlInfo)
 	if err != nil {
 		panic(err)
 	}
-	contactView, err = views.NewView("views/contact.gohtml")
-	if err != nil {
-		panic(err)
-	}
+	defer us.Close()
+	us.AutoMigrate()
+
+	staticC := controllers.NewStatic()
+	usersC := controllers.NewUsers(us)
 
 	r := mux.NewRouter()
-	r.HandleFunc("/", home)
-	r.HandleFunc("/contact", contact)
+	r.Handle("/", staticC.Home).Methods("GET")
+	r.Handle("/contact", staticC.Contact).Methods("GET")
+	r.HandleFunc("/signup", usersC.New).Methods("GET")
+	r.HandleFunc("/signup", usersC.Create).Methods("POST")
+	r.Handle("/login", usersC.LoginView).Methods("GET")
+	r.HandleFunc("/login", usersC.Login).Methods("POST")
+	r.HandleFunc("/cookietest", usersC.CookieTest).Methods("GET")
 	http.ListenAndServe(":3000", r)
-}
-
-func home(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	err := homeView.Template.ExecuteTemplate(w, homeView.Layout, nil)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func contact(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	err := contactView.Template.ExecuteTemplate(w, homeView.Layout, nil)
-	if err != nil {
-		panic(err)
-	}
 }
