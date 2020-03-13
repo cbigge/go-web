@@ -55,7 +55,8 @@ func NewUserService(connectionInfo string) (*UserService, error) {
 	db.LogMode(true)
 	hmac := hash.NewHMAC(hmacSecretKey)
 	return &UserService{
-		db: db,
+		db:   db,
+		hmac: hmac,
 	}, nil
 }
 
