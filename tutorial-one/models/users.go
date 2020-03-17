@@ -12,6 +12,28 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	hmacSecretKey = "super-secret-hmac-key"
+	userPwPepper  = "super-secret-pepper"
+)
+
+var _ UserDB = &userGorm{}
+var _ UserService = &userService{}
+
+var (
+	// ErrNotFound is returned when a resource cannot be
+	// found in the db
+	ErrNotFound = errors.New("models: resource not found")
+
+	// ErrInvalidID is returned when an invalid ID is passed
+	// to a method like Delete
+	ErrInvalidID = errors.New("models: ID provided was invalid")
+
+	// ErrInvalidPassword is returned when an invlalid password
+	// is entered on authentication
+	ErrInvalidPassword = errors.New("models: incorrect password provided")
+)
+
 // UserDB is used to interact with the users database
 //
 // For single user queries:
@@ -42,6 +64,20 @@ type UserDB interface {
 	DestructiveReset() error
 }
 
+// UserService is a set of methods used to manipulate and
+// work with the user model
+type UserService interface {
+	// Authenticate will verify the provided email and
+	// password. If they are correct, the user with
+	// the corresponding email with be returned. If
+	// no user is found, it will return one of these
+	// errors:
+	// ErrNotFound, ErrInvalidPassword, or another error
+	// if something goes wrong
+	Authenticate(email, password string) (*User, error)
+	UserDB
+}
+
 type User struct {
 	gorm.Model
 	Name         string
@@ -59,10 +95,6 @@ type userGorm struct {
 	hmac hash.HMAC
 }
 
-type UserService struct {
-	UserDB
-}
-
 // userValidator is our validation layer that validates
 // and normalizes data before passing it on to the UserDB
 // in the interface chain
@@ -70,26 +102,9 @@ type userValidator struct {
 	UserDB
 }
 
-const (
-	hmacSecretKey = "super-secret-hmac-key"
-	userPwPepper  = "super-secret-pepper"
-)
-
-var _ UserDB = &userGorm{}
-
-var (
-	// ErrNotFound is returned when a resource cannot be
-	// found in the db
-	ErrNotFound = errors.New("models: resource not found")
-
-	// ErrInvalidID is returned when an invalid ID is passed
-	// to a method like Delete
-	ErrInvalidID = errors.New("models: ID provided was invalid")
-
-	// ErrInvalidPassword is returned when an invlalid password
-	// is entered on authentication
-	ErrInvalidPassword = errors.New("models: incorrect password provided")
-)
+type userService struct {
+	UserDB
+}
 
 func newUserGorm(connectionInfo string) (*userGorm, error) {
 	db, err := gorm.Open("postgres", connectionInfo)
@@ -105,13 +120,13 @@ func newUserGorm(connectionInfo string) (*userGorm, error) {
 }
 
 // NewUserService creates a db connection
-func NewUserService(connectionInfo string) (*UserService, error) {
+func NewUserService(connectionInfo string) (UserService, error) {
 	ug, err := newUserGorm(connectionInfo)
 	if err != nil {
 		return nil, err
 	}
-	return &UserService{
-		UserDB: userValidator{
+	return &userService{
+		UserDB: &userValidator{
 			UserDB: ug,
 		},
 	}, nil
@@ -140,9 +155,9 @@ func (ug *userGorm) ByID(id uint) (*User, error) {
 
 // ByEmail queries the db to find a User by their
 // email and returns the User object
-func (us *UserService) ByEmail(email string) (*User, error) {
+func (ug *userGorm) ByEmail(email string) (*User, error) {
 	var user User
-	db := us.db.Where("email = ?", email)
+	db := ug.db.Where("email = ?", email)
 	err := first(db, &user)
 	return &user, err
 }
@@ -211,7 +226,7 @@ func (ug *userGorm) Delete(id uint) error {
 //   return user, nil
 // Otherwise if another error is encountered,
 //   return nil, error
-func (us *UserService) Authenticate(email, password string) (*User, error) {
+func (us *userService) Authenticate(email, password string) (*User, error) {
 	foundUser, err := us.ByEmail(email)
 	if err != nil {
 		return nil, err
