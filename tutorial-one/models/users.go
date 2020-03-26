@@ -306,10 +306,6 @@ func (uv *userValidator) ByEmail(email string) (*User, error) {
 // Create wil create the provided user and backfill data
 // like ID, CreatedAt, and UpdatedAt fields
 func (uv *userValidator) Create(user *User) error {
-	if err := runUserValFns(user, uv.bcryptPassword); err != nil {
-		return err
-	}
-
 	err := runUserValFns(user,
 		uv.passwordRequired,
 		uv.passwordMinLength,
