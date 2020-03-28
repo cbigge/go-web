@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/cbigge/go-web/tutorial-one/controllers"
+	"github.com/cbigge/go-web/tutorial-one/middleware"
 	"github.com/cbigge/go-web/tutorial-one/models"
 
 	"github.com/gorilla/mux"
@@ -19,8 +20,8 @@ const (
 )
 
 func main() {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s password=%s "+
+		"dbname=%s sslmode=disable", host, port, user, password, dbname)
 
 	services, err := models.NewServices(psqlInfo)
 	if err != nil {
@@ -29,11 +30,20 @@ func main() {
 	defer services.Close()
 	services.AutoMigrate()
 
+	r := mux.NewRouter()
+
 	staticC := controllers.NewStatic()
 	usersC := controllers.NewUsers(services.User)
-	galleriesC := controllers.NewGalleries(services.Gallery)
+	galleriesC := controllers.NewGalleries(services.Gallery, r)
 
-	r := mux.NewRouter()
+	requireUserMw := middleware.RequireUser{
+		UserService: services.User,
+	}
+
+	newGallery := requireUserMw.Apply(galleriesC.New)
+	createGallery := requireUserMw.ApplyFn(galleriesC.Create)
+	editGallery := requireUserMw.ApplyFn(galleriesC.Edit)
+
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
 
@@ -43,8 +53,10 @@ func main() {
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
 	r.HandleFunc("/cookietest", usersC.CookieTest).Methods("GET")
 
-	r.Handle("/galleries/new", galleriesC.New).Methods("GET")
-	r.HandleFunc("/galleries", galleriesC.Create).Methods("POST")
+	r.Handle("/galleries/new", newGallery).Methods("GET")
+	r.HandleFunc("/galleries", createGallery).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).Methods("GET").Name("show_gallery")
+	r.HandleFunc("/galleries/{id:[0-9]+}/edit", editGallery).Methods("GET")
 
 	http.ListenAndServe(":4000", r)
 }
