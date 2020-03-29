@@ -36,13 +36,17 @@ func main() {
 	usersC := controllers.NewUsers(services.User)
 	galleriesC := controllers.NewGalleries(services.Gallery, r)
 
-	requireUserMw := middleware.RequireUser{
+	userMw := middleware.User{
 		UserService: services.User,
 	}
+	requireUserMw := middleware.RequireUser{}
 
-	newGallery := requireUserMw.Apply(galleriesC.New)
+	indexGallery := requireUserMw.ApplyFn(galleriesC.Index)
 	createGallery := requireUserMw.ApplyFn(galleriesC.Create)
+	newGallery := requireUserMw.Apply(galleriesC.New)
 	editGallery := requireUserMw.ApplyFn(galleriesC.Edit)
+	updateGallery := requireUserMw.ApplyFn(galleriesC.Update)
+	deleteGallery := requireUserMw.ApplyFn(galleriesC.Delete)
 
 	r.Handle("/", staticC.Home).Methods("GET")
 	r.Handle("/contact", staticC.Contact).Methods("GET")
@@ -53,10 +57,15 @@ func main() {
 	r.HandleFunc("/login", usersC.Login).Methods("POST")
 	r.HandleFunc("/cookietest", usersC.CookieTest).Methods("GET")
 
-	r.Handle("/galleries/new", newGallery).Methods("GET")
+	r.Handle("/galleries", indexGallery).Methods("GET").
+		Name(controllers.IndexGalleries)
 	r.HandleFunc("/galleries", createGallery).Methods("POST")
-	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).Methods("GET").Name("show_gallery")
+	r.Handle("/galleries/new", newGallery).Methods("GET")
+	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).Methods("GET").
+		Name(controllers.ShowGallery)
 	r.HandleFunc("/galleries/{id:[0-9]+}/edit", editGallery).Methods("GET")
+	r.HandleFunc("/galleries/{id:[0-9]+}/update", updateGallery).Methods("POST")
+	r.HandleFunc("/galleries/{id:[0-9]+}/delete", deleteGallery).Methods("POST")
 
-	http.ListenAndServe(":4000", r)
+	http.ListenAndServe(":4000", userMw.Apply(r))
 }
