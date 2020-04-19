@@ -1,11 +1,7 @@
 package controllers
 
 import (
-	"fmt"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 
 	"github.com/cbigge/go-web/tutorial-one/context"
@@ -23,13 +19,14 @@ const (
 	maxMultipartMemory = 1 << 20 // 1 MB
 )
 
-func NewGalleries(gs models.GalleryService, r *mux.Router) *Galleries {
+func NewGalleries(gs models.GalleryService, is models.ImageService, r *mux.Router) *Galleries {
 	return &Galleries{
 		New:       views.NewView("bootstrap", "galleries/new"),
 		ShowView:  views.NewView("bootstrap", "galleries/show"),
 		EditView:  views.NewView("bootstrap", "galleries/edit"),
 		IndexView: views.NewView("bootstrap", "galleries/index"),
 		gs:        gs,
+		is:        is,
 		r:         r,
 	}
 }
@@ -40,6 +37,7 @@ type Galleries struct {
 	EditView  *views.View
 	IndexView *views.View
 	gs        models.GalleryService
+	is        models.ImageService
 	r         *mux.Router
 }
 
@@ -62,6 +60,8 @@ func (g *Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models
 		}
 		return nil, err
 	}
+	images, _ := g.is.ByGalleryID(gallery.ID)
+	gallery.Images = images
 	return gallery, nil
 }
 
@@ -231,14 +231,6 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	galleryPath := filepath.Join("images", "galleries", fmt.Sprintf("%v", gallery.ID))
-	err = os.MkdirAll(galleryPath, 0755)
-	if err != nil {
-		vd.SetAlert(err)
-		g.EditView.Render(w, r, vd)
-		return
-	}
-
 	imagePtrs := r.MultipartForm.File["images"]
 	for _, i := range imagePtrs {
 		image, err := i.Open()
@@ -248,14 +240,8 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer image.Close()
-		dst, err := os.Create(filepath.Join(galleryPath, i.Filename))
-		if err != nil {
-			vd.SetAlert(err)
-			g.EditView.Render(w, r, vd)
-			return
-		}
-		defer dst.Close()
-		_, err = io.Copy(dst, image)
+
+		err = g.is.Create(gallery.ID, image, i.Filename)
 		if err != nil {
 			vd.SetAlert(err)
 			g.EditView.Render(w, r, vd)
