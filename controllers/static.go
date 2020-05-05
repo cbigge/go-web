@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"github.com/cbigge/go-web/tutorial-one/views"
+	"github.com/cbigge/go-web/views"
 )
 
 type Static struct {

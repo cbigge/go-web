@@ -5,21 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cbigge/go-web/tutorial-one/controllers"
-	"github.com/cbigge/go-web/tutorial-one/middleware"
-	"github.com/cbigge/go-web/tutorial-one/models"
-	"github.com/cbigge/go-web/tutorial-one/rand"
+	"github.com/cbigge/go-web/controllers"
+	"github.com/cbigge/go-web/middleware"
+	"github.com/cbigge/go-web/models"
+	"github.com/cbigge/go-web/rand"
 
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
-)
-
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "a9725770137"
-	dbname   = "example_dev"
 )
 
 func main() {
@@ -46,12 +38,6 @@ func main() {
 	staticC := controllers.NewStatic()
 	usersC := controllers.NewUsers(services.User)
 	galleriesC := controllers.NewGalleries(services.Gallery, services.Image, r)
-
-	b, err := rand.Bytes(32)
-	if err != nil {
-		panic(err)
-	}
-	csrfMw := csrf.Protect(b, csrf.Secure(cfg.isProd()))
 
 	userMw := middleware.User{
 		UserService: services.User,
@@ -93,12 +79,22 @@ func main() {
 	r.Handle("/galleries/new", newGallery).Methods("GET")
 	r.HandleFunc("/galleries/{id:[0-9]+}", galleriesC.Show).Methods("GET").
 		Name(controllers.ShowGallery)
-	r.HandleFunc("/galleries/{id:[0-9]+}/edit", editGallery).Methods("GET")
+	r.HandleFunc("/galleries/{id:[0-9]+}/edit", editGallery).Methods("GET").
+		Name(controllers.EditGallery)
 	r.HandleFunc("/galleries/{id:[0-9]+}/update", updateGallery).Methods("POST")
 	r.HandleFunc("/galleries/{id:[0-9]+}/delete", deleteGallery).Methods("POST")
 	r.HandleFunc("/galleries/{id:[0-9]+}/images", uploadImage).Methods("POST")
 	r.HandleFunc("/galleries/{id:[0-9]+}/images/{filename}/delete", deleteImage).Methods("POST")
 
+	b, err := rand.Bytes(32)
+	if err != nil {
+		panic(err)
+	}
+	csrfMw := csrf.Protect(b, csrf.Secure(cfg.isProd()))
+
 	fmt.Printf("Server starting on :%d...", cfg.Port)
-	http.ListenAndServe(fmt.Sprintf("%d", cfg.Port), csrfMw(userMw.Apply(r)))
+	err = http.ListenAndServe(fmt.Sprintf(":%d", cfg.Port), csrfMw(userMw.Apply(r)))
+	if err != nil {
+		panic(err)
+	}
 }

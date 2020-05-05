@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cbigge/go-web/tutorial-one/context"
-	"github.com/cbigge/go-web/tutorial-one/models"
+	"github.com/cbigge/go-web/context"
+	"github.com/cbigge/go-web/models"
 )
 
 // User middleware will lookup the current user via their remember_token

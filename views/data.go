@@ -3,7 +3,7 @@ package views
 import (
 	"log"
 
-	"github.com/cbigge/go-web/tutorial-one/models"
+	"github.com/cbigge/go-web/models"
 )
 
 const (

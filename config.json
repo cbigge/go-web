@@ -7,7 +7,7 @@
         "host": "localhost",
         "port": 5432,
         "user": "postgres",
-        "password": "password",
+        "password": "a9725770137",
         "name": "example_dev"
     }
 }

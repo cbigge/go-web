@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"path/filepath"
 
-	"github.com/cbigge/go-web/tutorial-one/context"
+	"github.com/cbigge/go-web/context"
 
 	"github.com/gorilla/csrf"
 )

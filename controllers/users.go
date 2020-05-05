@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/cbigge/go-web/tutorial-one/models"
-	"github.com/cbigge/go-web/tutorial-one/rand"
-	"github.com/cbigge/go-web/tutorial-one/views"
+	"github.com/cbigge/go-web/models"
+	"github.com/cbigge/go-web/rand"
+	"github.com/cbigge/go-web/views"
 )
 
 type Users struct {

@@ -1,8 +1,8 @@
 package models
 
 import (
-	"github.com/cbigge/go-web/tutorial-one/hash"
-	"github.com/cbigge/go-web/tutorial-one/rand"
+	"github.com/cbigge/go-web/hash"
+	"github.com/cbigge/go-web/rand"
 
 	"github.com/jinzhu/gorm"
 	// Not directly called but required for postgres to work

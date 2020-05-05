@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/cbigge/go-web/tutorial-one/context"
-	"github.com/cbigge/go-web/tutorial-one/models"
-	"github.com/cbigge/go-web/tutorial-one/views"
+	"github.com/cbigge/go-web/context"
+	"github.com/cbigge/go-web/models"
+	"github.com/cbigge/go-web/views"
 
 	"github.com/gorilla/mux"
 )
@@ -74,8 +74,9 @@ func (g *Galleries) galleryByID(w http.ResponseWriter, r *http.Request) (*models
 // Index renders a view of all galleries that correspond to the
 // current user
 func (g *Galleries) Index(w http.ResponseWriter, r *http.Request) {
-	user := context.User(r.Context())
-	galleries, err := g.gs.ByUserID(user.ID)
+	//user := context.User(r.Context())
+	//galleries, err := g.gs.ByUserID(user.ID)
+	galleries, err := g.gs.GetAll()
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Something went wrong.", http.StatusInternalServerError)
@@ -258,6 +259,7 @@ func (g *Galleries) ImageUpload(w http.ResponseWriter, r *http.Request) {
 
 	url, err := g.r.Get(EditGallery).URL("id", fmt.Sprintf("%v", gallery.ID))
 	if err != nil {
+		log.Println(err)
 		http.Redirect(w, r, "/galleries", http.StatusFound)
 		return
 	}

@@ -3,7 +3,7 @@ package context
 import (
 	"context"
 
-	"github.com/cbigge/go-web/tutorial-one/models"
+	"github.com/cbigge/go-web/models"
 )
 
 type privateKey string
