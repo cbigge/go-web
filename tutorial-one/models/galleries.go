@@ -16,9 +16,23 @@ const (
 // and is mostly a container resource composed of images
 type Gallery struct {
 	gorm.Model
-	UserID uint     `gorm:"not_null;index"`
-	Title  string   `gorm:"not_null"`
-	Images []string `gorm:"-"`
+	UserID uint    `gorm:"not_null;index"`
+	Title  string  `gorm:"not_null"`
+	Images []Image `gorm:"-"`
+}
+
+// ImagesSplitN splits a gallery of images in to n
+// columns in a 2d slice
+func (g *Gallery) ImagesSplitN(n int) [][]Image {
+	ret := make([][]Image, n)
+	for i := 0; i < n; i++ {
+		ret[i] = make([]Image, 0)
+	}
+	for i, img := range g.Images {
+		bucket := i % n
+		ret[bucket] = append(ret[bucket], img)
+	}
+	return ret
 }
 
 type GalleryService interface {

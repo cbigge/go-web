@@ -2,11 +2,18 @@
     <div class="row">
         <div class="col-md-12">
             <h1>{{.Title}}</h1>
-            <ul>
-                {{range .Images}}
-                    <li>{{.}}</li>
-                {{end}}
-            </ul>
+            <hr />
         </div>
+    </div>
+    <div class="row">
+        {{range .ImagesSplitN 3}}
+            <div class="col-md-4">
+                {{range .}}
+                    <a href="{{.Path}}">
+                        <img src="{{.Path}}" class="thumbnail" />
+                    </a>
+                {{end}}
+            </div>
+        {{end}}
     </div>
 {{end}}

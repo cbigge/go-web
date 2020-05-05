@@ -13,9 +13,6 @@ import (
 )
 
 const (
-	hmacSecretKey = "super-secret-hmac-key"
-	userPwPepper  = "super-secret-pepper"
-
 	// ErrNotFound is returned when a resource cannot be
 	// found in the db
 	ErrNotFound modelError = "models: resource not found"
@@ -168,15 +165,17 @@ type UserService interface {
 
 type userService struct {
 	UserDB
+	pepper string
 }
 
 // NewUserService creates a db connection
-func NewUserService(db *gorm.DB) UserService {
+func NewUserService(db *gorm.DB, pepper, hmacKey string) UserService {
 	ug := &userGorm{db}
-	hmac := hash.NewHMAC(hmacSecretKey)
-	uv := newUserValidator(ug, hmac)
+	hmac := hash.NewHMAC(hmacKey)
+	uv := newUserValidator(ug, hmac, pepper)
 	return &userService{
 		UserDB: uv,
+		pepper: pepper,
 	}
 }
 
@@ -197,7 +196,7 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 		return nil, err
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password+userPwPepper))
+	err = bcrypt.CompareHashAndPassword([]byte(foundUser.PasswordHash), []byte(password+us.pepper))
 	switch err {
 	case nil:
 		return foundUser, nil
@@ -214,15 +213,17 @@ func (us *userService) Authenticate(email, password string) (*User, error) {
 type userValidator struct {
 	UserDB
 	hmac       hash.HMAC
+	pepper     string
 	emailRegex *regexp.Regexp
 }
 
 type userValFn func(*User) error
 
-func newUserValidator(udb UserDB, hmac hash.HMAC) *userValidator {
+func newUserValidator(udb UserDB, hmac hash.HMAC, pepper string) *userValidator {
 	return &userValidator{
 		UserDB:     udb,
 		hmac:       hmac,
+		pepper:     pepper,
 		emailRegex: regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,16}$`),
 	}
 }
@@ -311,7 +312,7 @@ func (uv *userValidator) bcryptPassword(user *User) error {
 		return nil
 	}
 
-	pwBytes := []byte(user.Password + userPwPepper)
+	pwBytes := []byte(user.Password + uv.pepper)
 	hashedBytes, err := bcrypt.GenerateFromPassword(pwBytes, bcrypt.DefaultCost)
 	if err != nil {
 		return err
