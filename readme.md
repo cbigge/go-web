@@ -1,5 +1,4 @@
-# go-web 
-![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/cbigge/go-web)
+# go-web ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/cbigge/go-web)
 
 This web project is a image gallery hosting platform that I built to learn web programming in golang. It is built using a MVC architecture. The `models/` folder contains all the data models and database communication. The `controllers/` folder contains all communication logic between the models and views, as well as manages routes. The `view/` folder contains all frontend pages and templates.
 There are other utility folders in the project that serve different functions. 
