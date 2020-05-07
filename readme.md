@@ -8,18 +8,18 @@ There are other utility folders in the project that serve different functions.
 - The `middleware/` folder contains functionality that checks user authentication for access to view specific routes. 
 - The `rand/` folder contains functionality for string encoding that is used for a user's 'remember_token' which is how the server knows if they are authenticated.
 
-## Prerequisites:
+## Prerequisites
 - Go 1.13+
 - Postgres
 
-## Before you run:
+## Before you run
 - Create a database in postgres
 - Update the config.json file with the database information and postgres credentials
 
-## How to run:
+## How to run
 - Compile and start by running `go run *.go` in the base project directory. The `*.go` is required because there is two files in the base project directory that need to be compiled and ran together: `main.go` and `config.go`
 
-## Usage:
+## Usage
 - First, you need to create an account; you can't do anything without one.
 - After signing up, you will see that a new item is on the navigation bar titled `Galleries`. Go ahead and navigate to it.
 - On the galleries page, you will be able to see all of the current galleries, as well as create your own.
